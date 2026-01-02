@@ -25,12 +25,6 @@
 ### 2. Item Components (1.21+)
 * `make %itemstack% [look] shiny`: Applies the modern `enchantment_glint_override`.
 * `make %itemstack% [look] (dull|unshiny)`: Removes the glint override.
-
-### 3. Performance Profiler
-* `/skriptprofile start/stop`: Record real-time execution timings.
-* `/skriptprofile status`: Check if the recorder is active.
-* `/skriptprofile report [count]`: Generate a chat-based breakdown of the laggiest events.
-
 ---
 
 ## 📖 Scripting Examples
