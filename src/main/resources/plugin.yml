@@ -1,0 +1,25 @@
+name: skGull
+version: 1.0.0
+main: org.serratedgull.skGull.SkGull
+author: SerratedGull
+description: Advanced Skript addon for entity interaction, raycasting, and performance profiling
+api-version: 1.21
+depend: [Skript]
+softdepend: []
+
+commands:
+  skriptprofile:
+    description: Manage Skript performance profiling
+    usage: /skriptprofile <start|stop|report|status>
+    permission: skgull.profile
+    aliases: [skprofile, sprof]
+
+permissions:
+  skgull.*:
+    description: Grants all skGull permissions
+    children:
+      skgull.profile: true
+
+  skgull.profile:
+    description: Allows using the Skript profiler
+    default: op

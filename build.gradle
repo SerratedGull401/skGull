@@ -1,0 +1,23 @@
+plugins {
+    id 'java'
+}
+
+group = 'org.serratedgull'
+version = '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+    maven { url = 'https://repo.papermc.io/repository/maven-public/' }
+    maven { url = 'https://repo.skriptlang.org/releases' }
+}
+
+dependencies {
+    compileOnly "io.papermc.paper:paper-api:1.21.11-R0.1-SNAPSHOT"
+    compileOnly "com.github.SkriptLang:Skript:2.13.2"
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21) // Java 21 matches your Paper API
+    }
+}
