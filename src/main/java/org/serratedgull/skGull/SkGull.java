@@ -14,6 +14,7 @@ import org.serratedgull.skGull.elements.effects.EffEntityDoorPower;
 import org.serratedgull.skGull.elements.effects.EffSetEntityPath; // Added Import
 import org.serratedgull.skGull.managers.ZoneManager;
 import org.serratedgull.skGull.listeners.MoveListener;
+import org.serratedgull.skGull.elements.events.EvtPlayerSeeEntity;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -51,7 +52,6 @@ public class SkGull extends JavaPlugin {
 
         // 4. Start Background Schedulers
         startLookAtEntityScheduler();
-
         // --- NEW PATHFINDING & DOOR TASKS ---
         // These are the loops that actually handle the "Interpolation" and "Door Checking"
         EffSetEntityPath.startPathTask(this);
@@ -102,6 +102,7 @@ public class SkGull extends JavaPlugin {
     @Override
     public void onDisable() {
         lookCache.clear();
+        org.serratedgull.skGull.elements.effects.EffEmitSound.cleanupAll();
         getLogger().info("skGull disabled.");
     }
 
