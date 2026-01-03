@@ -7,10 +7,14 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.util.RayTraceResult;
+import org.serratedgull.skGull.elements.effects.EffEntityPatrol;
 import org.serratedgull.skGull.elements.events.PlayerLookingAtEntityEvent;
-import org.serratedgull.skGull.profiler.SkriptProfiler;
 import org.serratedgull.skGull.elements.events.PlayerLookAtEntityEvent;
+import org.serratedgull.skGull.elements.effects.EffEntityDoorPower;
+import org.serratedgull.skGull.elements.effects.EffSetEntityPath; // Added Import
+import org.serratedgull.skGull.managers.ZoneManager;
+import org.serratedgull.skGull.listeners.MoveListener;
+
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -20,13 +24,42 @@ public class SkGull extends JavaPlugin {
 
     private static SkGull instance;
     private static SkriptAddon addon;
-    private SkriptProfiler profiler;
 
-    // Cache to prevent the event from firing every single tick while looking
-// Top of SkGull class
     private final Map<UUID, TargetInfo> lookCache = new HashMap<>();
-
     private record TargetInfo(UUID targetId, double lastDistance) {}
+
+    @Override
+    public void onEnable() {
+        instance = this;
+
+        // 1. Initialize Zone Manager
+        ZoneManager.setup(this);
+
+        // 2. Register Native Bukkit Listeners
+        Bukkit.getPluginManager().registerEvents(new MoveListener(), this);
+
+        // 3. Register Skript Addon
+        addon = Skript.registerAddon(this);
+        try {
+            addon.loadClasses("org.serratedgull.skGull", "elements");
+            getLogger().info("skGull elements loaded successfully!");
+        } catch (IOException e) {
+            getLogger().severe("Failed to load skGull classes!");
+            e.printStackTrace();
+            return;
+        }
+
+        // 4. Start Background Schedulers
+        startLookAtEntityScheduler();
+
+        // --- NEW PATHFINDING & DOOR TASKS ---
+        // These are the loops that actually handle the "Interpolation" and "Door Checking"
+        EffSetEntityPath.startPathTask(this);
+        EffEntityDoorPower.startDoorTask(this);
+        EffEntityPatrol.startPatrolTask(this);
+
+        getLogger().info("skGull v1.2.0 (Interpolated Paths & Doors) enabled!");
+    }
 
     private void startLookAtEntityScheduler() {
         final double SCAN_DISTANCE = 100.0;
@@ -50,18 +83,13 @@ public class SkGull extends JavaPlugin {
                     double currentDist = player.getEyeLocation().distance(target.getLocation());
                     UUID currentTargetId = target.getUniqueId();
 
-                    // Fire Continuous Event (Always fires)
                     Bukkit.getPluginManager().callEvent(new PlayerLookingAtEntityEvent(player, target, result.getHitPosition()));
 
-                    // Logic: Fire "Once" if target changed OR if player significantly changed distance
-                    // We check if they moved more than 0.5 blocks to avoid spamming
                     boolean changedTarget = (previous == null || !currentTargetId.equals(previous.targetId()));
                     boolean movedCloser = (previous != null && (previous.lastDistance() - currentDist) > 0.5);
 
                     if (changedTarget || movedCloser) {
-                        PlayerLookAtEntityEvent onceEvent = new PlayerLookAtEntityEvent(player, target, result.getHitPosition());
-                        Bukkit.getPluginManager().callEvent(onceEvent);
-
+                        Bukkit.getPluginManager().callEvent(new PlayerLookAtEntityEvent(player, target, result.getHitPosition()));
                         lookCache.put(playerId, new TargetInfo(currentTargetId, currentDist));
                     }
                 } else {
@@ -72,33 +100,9 @@ public class SkGull extends JavaPlugin {
     }
 
     @Override
-    public void onEnable() {
-        instance = this;
-        addon = Skript.registerAddon(this);
-        profiler = new SkriptProfiler();
-        ProfileCommand profileCmd = new ProfileCommand(profiler);
-        getCommand("skriptprofile").setExecutor(profileCmd);
-        getCommand("skriptprofile").setTabCompleter(profileCmd);
-
-        try {
-            // This line automatically registers your Events/Expressions/Effects
-            // provided they have the proper 'static' registration blocks.
-            addon.loadClasses("org.serratedgull.skGull", "elements");
-            getLogger().info("skGull classes loaded successfully!");
-        } catch (IOException e) {
-            getLogger().severe("Failed to load skGull classes!");
-            e.printStackTrace();
-            return;
-        }
-
-        startLookAtEntityScheduler();
-        getLogger().info("skGull v1.0.1 enabled!");
-    }
-
-    @Override
     public void onDisable() {
-        if (profiler != null) profiler.stop();
         lookCache.clear();
+        getLogger().info("skGull disabled.");
     }
 
     public static SkGull getInstance() { return instance; }

@@ -1,5 +1,5 @@
 name: skGull
-version: 1.0.0
+version: 0.0.1
 main: org.serratedgull.skGull.SkGull
 author: SerratedGull
 description: Advanced Skript addon for entity interaction, raycasting, and performance profiling
